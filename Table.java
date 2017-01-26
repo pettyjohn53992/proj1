@@ -269,49 +269,81 @@ public class Table
         String [] u_attrs = attributes2.split (" ");
         List <Comparable []> rows = new ArrayList <> ();
         
+     
+        for(Comparable [] tup : tuples) {
+        	Comparable[] t = this.extract(tup, t_attrs);
+        	
+            for(Comparable [] tup2 : table2.tuples) {
+            	Comparable[] t2 = table2.extract(tup2, u_attrs);
+            	
+            	if(eq(t,t2)) {
+            		Comparable [] result = ArrayUtil.concat(tup,tup2);
+            		rows.add(result);
+                
+            	}
+           	}
+          }
         
-        List <Comparable []> l1= new ArrayList <> ();
-        List <Comparable []> l2= new ArrayList <> ();
-      
-      
-     
-      for(Comparable [] tup : table2.tuples) {
-      	Comparable[] t = this.extract(tup, u_attrs);
-      	l2.add(t);
-     
-    }
-      
-      for(Comparable [] tup : tuples) {
-      	Comparable[] t = this.extract(tup, t_attrs);
-      	l1.add(t);
-     
-    }
-      for(Comparable [] tup : tuples) {
-        	if(l2.contains(tup)) {
-        		rows.add(tup);
-        		l2.remove(tup);
-        	}
-      }
-      
-//        for(Comparable [] tup : tuples) {
-//        	Comparable[] t = this.extract(tup, t_attrs);
-//
-//        	for(Comparable [] tup1 : table2.tuples) {
-//        		Comparable[] t2 = this.extract(tup1, u_attrs);
-//        		if(t==t2) {
-//        			Comparable[] res =  ArrayUtil.concat(tup,tup1);
-//        			if(!rows.contains(res)) {
-//        				rows.add(res);
-//        			}
-//        		}
-//        	}
-//        }
+        
+
         
         //  T O   B E   I M P L E M E N T E D 
 
         return new Table (name + count++, ArrayUtil.concat (attribute, table2.attribute),
                                           ArrayUtil.concat (domain, table2.domain), key, rows);
     } // join
+    
+    
+    
+    public boolean eq(Comparable [] t1, Comparable [] t2)
+    {
+    	
+    	for(int i=0; i<t1.length; i++) {
+    		if(t1[i]!=t2[i]) {
+    			return false;
+    		}
+    	}
+    	
+    	
+    	out.println("MATCH ");
+    	return true;
+    }
+    
+    public Comparable [] addTup(Comparable [] t1, Comparable [] t2)
+    {
+    	
+    	Comparable [] result = ArrayUtil.concat(t1,t2);
+    	return result;
+    }
+    
+    public Comparable [] makeUnique(Comparable [] t1)
+    {
+    	
+       
+        List <Comparable > other = new ArrayList <> ();
+
+        for(Comparable c : t1) {
+        	 if(!other.contains(c)) {
+        		 other.add(c);
+        	 }
+        }
+        Comparable [] result = other.toArray(new Comparable[other.size()]);
+    	return result;
+    }
+    public String [] makeUnique(String [] s1)
+    {
+    	
+       
+        List <String > other = new ArrayList <> ();
+
+        for(String c : s1) {
+        	 if(!other.contains(c)) {
+        		 other.add(c);
+        	 }
+        }
+        String [] result = other.toArray(new String[other.size()]);
+    	return result;
+    }
 
     /************************************************************************************
      * Join this table and table2 by performing an "natural join".  Tuples from both tables
@@ -328,11 +360,41 @@ public class Table
         out.println ("RA> " + name + ".join (" + table2.name + ")");
 
         List <Comparable []> rows = new ArrayList <> ();
+        List <String > matches = new ArrayList <> ();
+        
+        
+        for (String att : attribute) {
+        	for (String att2 : table2.attribute) {
+        		if(att.equals(att2)) {
+        			matches.add(att);
+        		}
+        	}
+        		
+        }
+        
+        String [] attrs = matches.toArray(new String[matches.size()]);
+        
 
+        for(Comparable [] tup : tuples) {
+        	Comparable[] t = this.extract(tup, attrs);
+        	
+            for(Comparable [] tup2 : table2.tuples) {
+            	Comparable[] t2 = table2.extract(tup2, attrs);
+            	
+            	if(eq(t,t2)) {
+            		Comparable [] result = ArrayUtil.concat(tup,tup2);
+            		
+            		rows.add(makeUnique(result));
+                
+            	}
+           	}
+          }
+        
+        String[] attribu = ArrayUtil.concat (attribute, table2.attribute);
         //  T O   B E   I M P L E M E N T E D 
 
         // FIX - eliminate duplicate columns
-        return new Table (name + count++, ArrayUtil.concat (attribute, table2.attribute),
+        return new Table (name + count++,attribu ,
                                           ArrayUtil.concat (domain, table2.domain), key, rows);
     } // join
 
