@@ -537,9 +537,18 @@ public class Table
      */
     private boolean typeCheck (Comparable [] t)
     { 
-        //  T O   B E   I M P L E M E N T E D 
-
-        return true;
+    	boolean check = false;
+        if(t.length == attribute.length){
+        	for(int i = 0; i < t.length; i++){
+        		if(true)
+        			check = true;
+        		else{
+        			check = false;
+        			break;
+        		}
+        	}
+        }        
+        return check;
     } // typeCheck
 
     /************************************************************************************
