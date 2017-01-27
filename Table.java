@@ -19,6 +19,7 @@ import static java.lang.System.out;
  * select, union, minus and join. The insert data manipulation operator is also provided.
  * Missing are update and delete data manipulation operators.
  */
+@SuppressWarnings("all")
 public class Table
        implements Serializable
 {
@@ -145,7 +146,7 @@ public class Table
         Comparable[] tup2 = this.extract(tup, attrs);
         rows.add(tup2);
         }
-        
+       
         return new Table (name + count++, attrs, colDomain, newKey, rows);
     } // project
 
@@ -180,7 +181,8 @@ public class Table
         List <Comparable []> rows = new ArrayList <> ();
         Comparable[] c =index.get(keyVal);
         rows.add(c);
-
+       
+       
         return new Table (name + count++, attribute, domain, key, rows);
     } // select
 
@@ -209,6 +211,7 @@ public class Table
         			rows.add(tup);
         		}
         }
+       
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
@@ -234,6 +237,7 @@ public class Table
         		rows.add(tup);
         	}
         }
+        
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // minus
@@ -303,7 +307,9 @@ public class Table
     }
     
     public Comparable [] makeUnique(Comparable [] t1)
-    {       
+    {
+    	
+       
         List <Comparable > other = new ArrayList <> ();
 
         for(Comparable c : t1) {
@@ -315,7 +321,9 @@ public class Table
     	return result;
     }
     public String [] makeUnique(String [] s1)
-    {	  
+    {
+    	
+       
         List <String > other = new ArrayList <> ();
 
         for(String c : s1) {
@@ -337,44 +345,129 @@ public class Table
      * @param table2  the rhs table in the join operation
      * @return  a table with tuples satisfying the equality predicate
      */
-    public Table join (Table table2)
+public Table join (Table table2)
     {
+       	boolean leftover = false; 
         out.println ("RA> " + name + ".join (" + table2.name + ")");
-
-        List <Comparable []> rows = new ArrayList <> ();
-        List <String > matches = new ArrayList <> ();
-        
-        for (String att : attribute) {
-        	for (String att2 : table2.attribute) {
-        		if(att.equals(att2)) {
-        			matches.add(att);
+        List <String> newAttributes = new ArrayList <> ();
+        List <int[]>  similarColumns = new ArrayList<>();
+        List <Class> newDomains = new ArrayList <> ();
+        List <Comparable[]> rows = new ArrayList<>();
+        for(int i =0; i<attribute.length;i++)
+        {
+        	newAttributes.add(attribute[i]);
+        	newDomains.add(domain[i]);
+        }
+        if(this.attribute.length < table2.attribute.length)
+        {
+        	leftover = true;
+        }
+        int j = 0;
+        for(int i =0;i < this.attribute.length;i++)
+        {
+        	for(int k = i; k< table2.attribute.length;k++)
+        	{
+        		j = k;
+				if (!(this.attribute[i].equalsIgnoreCase(table2.attribute[k])))
+				{
+					newAttributes.add(table2.attribute[k]);
+					newDomains.add(table2.domain[k]);
+					System.out.println("ADDED!");
+					break;
+				}
+        		else
+        		{
+        			int[] temp = {i,k};
+        			similarColumns.add(temp);
+        			break;
         		}
         	}
-        		
         }
-        
-        String [] attrs = matches.toArray(new String[matches.size()]);
-        
-        for(Comparable [] tup : tuples) {
-        	Comparable[] t = this.extract(tup, attrs);
-        	
-            for(Comparable [] tup2 : table2.tuples) {
-            	Comparable[] t2 = table2.extract(tup2, attrs);
-            	if(eq(t,t2)) {
-            		Comparable [] result = ArrayUtil.concat(tup,tup2);
-            		rows.add(makeUnique(result));        
-            	}
-           	}
+        if(leftover)
+        {
+	        for(j = j+1;j < table2.attribute.length;j++)
+	        {
+	        	newAttributes.add(table2.attribute[j]);
+				newDomains.add(table2.domain[j]);
+	        }
         }
-        
-        String[] attribu = ArrayUtil.concat (attribute, table2.attribute);
-
-        // FIX - eliminate duplicate columns
-        return new Table (name + count++,attribu ,
-                                          ArrayUtil.concat (domain, table2.domain), key, rows);
+        boolean bad = false;
+        int[] ks = null;
+        for(Comparable[] t1Row : this.tuples)
+        {
+        	for(Comparable[] t2Row : table2.tuples)
+        	{
+        		for(int[] arr : similarColumns)
+        		{
+        			int i = arr[0];
+        			int k = arr[1];
+        			if(t1Row[i].compareTo(t2Row[k]) != 0)
+        			{
+        				bad = true;
+        				break;
+        			}
+        			ks = arr;
+        		}
+        		if(bad)
+        		{
+        			bad = false;
+        			continue;
+        		}
+        		else
+        		{
+        			rows.add(joinMatchedRows(t1Row,t2Row,similarColumns));
+        		}
+        	}
+        }
+        String[] attrs = new String[newAttributes.size()];
+        Class[] domains = new Class[newDomains.size()];
+        newAttributes.toArray(attrs);
+        newDomains.toArray(domains);
+        return new Table (name + count++, attrs,domains, key, rows);
     } // join
+    /**
+     * Method that assists with combining rows that have been considered
+     * a match. A match would be 2 rows in which all similar attributes are equal
+     *
+     * @param t1Row row from the initial table
+     * @param t2Row row from the table to be joined
+     * @return The joined row
+     */
+    public Comparable[] joinMatchedRows(Comparable[] t1Row, Comparable[] t2Row, List<int[]> sc)
+    {
+    	Comparable[] joined = null;
+    	ArrayList<Comparable> list = new ArrayList<>();
+    	for(Comparable c : t1Row)
+    	{
+    		list.add(c);
+    	}
+    	boolean exists = false;
+    	if(sc.size() != 0)
+    	{
+	    	for(int i =0;i < t2Row.length;i++)
+	    	{
+	    		if(sc.get(i)[1] == i)
+	    		{
+	    			continue;
+	    		}
+	    		else
+	    		{
+	    			list.add(t2Row[i]);
+	    		}
+	    	}
+    	}
+    	else
+    	{
+    		for(Comparable a : t2Row)
+    		{
+    			list.add(a);
+    		}
+    	}
 
-    /************************************************************************************
+    	joined = new Comparable[list.size()];
+    	list.toArray(joined);
+    	return joined;
+    }   /************************************************************************************
      * Return the column position for the given attribute name.
      *
      * @param attr  the given attribute name
@@ -576,11 +669,7 @@ public class Table
     private boolean typeCheck (Comparable [] t)
     { 
     	boolean check = false;
-    	
-    	//Makes sure t.length is equal to the tuples size
         if(t.length == attribute.length){
-        	
-        	//Check each t's data type for mismatching data types. Breaks if there is a mismatch.
         	for(int i = 0; i < t.length; i++){
         		if(("class " + t[i].getClass().getName()).equals(domain[i].toString()))
         			check = true;
