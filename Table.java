@@ -145,9 +145,7 @@ public class Table
         Comparable[] tup2 = this.extract(tup, attrs);
         rows.add(tup2);
         }
-       
-       //  T O   B E   I M P L E M E N T E D 
-
+        
         return new Table (name + count++, attrs, colDomain, newKey, rows);
     } // project
 
@@ -182,9 +180,6 @@ public class Table
         List <Comparable []> rows = new ArrayList <> ();
         Comparable[] c =index.get(keyVal);
         rows.add(c);
-       
-        
-        //  T O   B E   I M P L E M E N T E D 
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // select
@@ -214,9 +209,6 @@ public class Table
         			rows.add(tup);
         		}
         }
-       
-       
-        //  T O   B E   I M P L E M E N T E D 
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // union
@@ -242,8 +234,6 @@ public class Table
         		rows.add(tup);
         	}
         }
-        
-        //  T O   B E   I M P L E M E N T E D 
 
         return new Table (name + count++, attribute, domain, key, rows);
     } // minus
@@ -284,10 +274,6 @@ public class Table
            	}
           }
         
-        
-
-        
-        //  T O   B E   I M P L E M E N T E D 
 
         return new Table (name + count++, ArrayUtil.concat (attribute, table2.attribute),
                                           ArrayUtil.concat (domain, table2.domain), key, rows);
@@ -317,9 +303,7 @@ public class Table
     }
     
     public Comparable [] makeUnique(Comparable [] t1)
-    {
-    	
-       
+    {       
         List <Comparable > other = new ArrayList <> ();
 
         for(Comparable c : t1) {
@@ -331,9 +315,7 @@ public class Table
     	return result;
     }
     public String [] makeUnique(String [] s1)
-    {
-    	
-       
+    {	  
         List <String > other = new ArrayList <> ();
 
         for(String c : s1) {
@@ -362,7 +344,6 @@ public class Table
         List <Comparable []> rows = new ArrayList <> ();
         List <String > matches = new ArrayList <> ();
         
-        
         for (String att : attribute) {
         	for (String att2 : table2.attribute) {
         		if(att.equals(att2)) {
@@ -374,24 +355,19 @@ public class Table
         
         String [] attrs = matches.toArray(new String[matches.size()]);
         
-
         for(Comparable [] tup : tuples) {
         	Comparable[] t = this.extract(tup, attrs);
         	
             for(Comparable [] tup2 : table2.tuples) {
             	Comparable[] t2 = table2.extract(tup2, attrs);
-            	
             	if(eq(t,t2)) {
             		Comparable [] result = ArrayUtil.concat(tup,tup2);
-            		
-            		rows.add(makeUnique(result));
-                
+            		rows.add(makeUnique(result));        
             	}
            	}
-          }
+        }
         
         String[] attribu = ArrayUtil.concat (attribute, table2.attribute);
-        //  T O   B E   I M P L E M E N T E D 
 
         // FIX - eliminate duplicate columns
         return new Table (name + count++,attribu ,
@@ -600,7 +576,11 @@ public class Table
     private boolean typeCheck (Comparable [] t)
     { 
     	boolean check = false;
+    	
+    	//Makes sure t.length is equal to the tuples size
         if(t.length == attribute.length){
+        	
+        	//Check each t's data type for mismatching data types. Breaks if there is a mismatch.
         	for(int i = 0; i < t.length; i++){
         		if(("class " + t[i].getClass().getName()).equals(domain[i].toString()))
         			check = true;
