@@ -602,7 +602,7 @@ public class Table
     	boolean check = false;
         if(t.length == attribute.length){
         	for(int i = 0; i < t.length; i++){
-        		if(true)
+        		if(("class " + t[i].getClass().getName()).equals(domain[i].toString()))
         			check = true;
         		else{
         			check = false;
